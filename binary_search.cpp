@@ -1,40 +1,55 @@
 #include <iostream>
 #include <vector>
+#include <limits>
+#include <utility>
+#include <queue>
 
-int binarySearch(const std::vector<int>& arr, int target) {
-    int left = 0;
-    int right = arr.size() - 1;
+// Dijkstra's algorithm to find the shortest path in a graph
+std::vector<int> dijkstra(int start, const std::vector<std::vector<std::pair<int, int>>>& graph) {
+    int n = graph.size();
+    std::vector<int> dist(n, std::numeric_limits<int>::max());
+    dist[start] = 0;
     
-    while (left <= right) {
-        int mid = left + (right - left) / 2;
+    using PII = std::pair<int, int>;
+    std::priority_queue<PII, std::vector<PII>, std::greater<PII>> pq;
+    pq.push({0, start});
+    
+    while (!pq.empty()) {
+        int d = pq.top().first;
+        int u = pq.top().second;
+        pq.pop();
         
-        // Check if target is present at mid
-        if (arr[mid] == target) {
-            return mid;
-        }
-        // If target is greater, ignore left half
-        else if (arr[mid] < target) {
-            left = mid + 1;
-        }
-        // If target is smaller, ignore right half
-        else {
-            right = mid - 1;
+        if (d > dist[u]) continue; // Skip if we have found a better path
+        
+        for (auto& edge : graph[u]) {
+            int v = edge.first;
+            int weight = edge.second;
+            
+            if (dist[u] + weight < dist[v]) {
+                dist[v] = dist[u] + weight;
+                pq.push({dist[v], v});
+            }
         }
     }
     
-    // Target not found
-    return -1;
+    return dist;
 }
 
 int main() {
-    std::vector<int> arr = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
-    int target = 6;
-    int result = binarySearch(arr, target);
+    // Example graph represented as an adjacency list
+    std::vector<std::vector<std::pair<int, int>>> graph = {
+        {{1, 4}, {2, 1}}, // edges from vertex 0
+        {{0, 4}, {2, 2}, {3, 2}}, // edges from vertex 1
+        {{0, 1}, {1, 2}, {3, 5}}, // edges from vertex 2
+        {{1, 2}, {2, 5}}  // edges from vertex 3
+    };
     
-    if (result != -1) {
-        std::cout << "Element found at index: " << result << std::endl;
-    } else {
-        std::cout << "Element not found" << std::endl;
+    int start = 0;
+    std::vector<int> distances = dijkstra(start, graph);
+    
+    std::cout << "Vertex Distance from Start\n";
+    for (int i = 0; i < distances.size(); ++i) {
+        std::cout << i << ": " << distances[i] << std::endl;
     }
     return 0;
 }
